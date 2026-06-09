@@ -1,0 +1,15 @@
+node_modules/
+
+# Environment (JWT, MongoDB URI, admin password)
+.env
+.env.*
+!.env.example
+
+# Uploaded files
+uploads/
+
+# User credentials file (generated from users.example.json)
+data/users.json
+
+# Logs
+*.log

@@ -1,0 +1,16 @@
+{
+  "users": [
+    {
+      "name": "Admin",
+      "email": "admin@newsportal.com",
+      "password": "admin123",
+      "role": "admin"
+    },
+    {
+      "name": "Demo Reader",
+      "email": "reader@newsportal.com",
+      "password": "reader123",
+      "role": "user"
+    }
+  ]
+}
