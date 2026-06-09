@@ -1,14 +1,17 @@
 const Comment = require("../models/Comment");
+const { sanitizePlainText } = require("../utils/sanitizeHtml");
 
-
-// ADD COMMENT (REAL TIME)
 exports.addComment = async (req, res) => {
   try {
+    const text = sanitizePlainText(req.body.text, 1000);
+    if (!text) {
+      return res.status(400).json({ message: "Comment cannot be empty" });
+    }
 
     const comment = await Comment.create({
       article: req.body.article,
       user: req.user.id,
-      text: req.body.text
+      text,
     });
 
     const populated = await Comment.findById(comment._id).populate("user", "name");

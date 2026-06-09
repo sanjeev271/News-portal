@@ -1,9 +1,12 @@
 import StreamPlayer from "./StreamPlayer";
 import CameraPlayer from "./CameraPlayer";
+import {
+  resolvePlaybackUrl,
+  getPlaybackKind,
+} from "../utils/liveStreamPlayback";
 
 export default function LiveStreamView({
   stream,
-  url,
   mode = "auto",
   className = "",
 }) {
@@ -18,22 +21,10 @@ export default function LiveStreamView({
   const isLive = stream.status === "live";
   const isCamera = stream.streamType === "camera";
   const wantsRecording = mode === "recording" || (mode === "auto" && !isLive);
+  const kind = getPlaybackKind(stream, mode);
+  const playbackUrl = resolvePlaybackUrl(stream, mode);
 
-  if (isCamera) {
-    if (wantsRecording && stream.recordingUrl) {
-      return <StreamPlayer url={stream.recordingUrl} title={stream.title} className={className} />;
-    }
-
-    if (wantsRecording && !stream.recordingUrl) {
-      return (
-        <div className={`flex aspect-video items-center justify-center bg-black text-slate-400 ${className}`}>
-          {isLive
-            ? "Recording will be available after the broadcast ends"
-            : "Camera broadcast — start from admin panel to go live"}
-        </div>
-      );
-    }
-
+  if (kind === "webrtc") {
     return (
       <CameraPlayer
         streamId={stream._id}
@@ -48,16 +39,32 @@ export default function LiveStreamView({
     );
   }
 
-  const streamUrl = url || stream.streamUrl;
-  if (!streamUrl) {
-    return (
-      <div className={`flex aspect-video items-center justify-center bg-black text-slate-400 ${className}`}>
-        {isLive
-          ? "No stream URL configured — add a YouTube or HLS URL in admin"
-          : "Add a stream URL in admin, then click Go Live"}
-      </div>
-    );
+  if (kind === "embed" && playbackUrl) {
+    return <StreamPlayer url={playbackUrl} title={stream.title} className={className} />;
   }
 
-  return <StreamPlayer url={streamUrl} title={stream.title} className={className} />;
+  let message = "No stream available";
+  if (isCamera) {
+    if (wantsRecording) {
+      message = isLive
+        ? "Recording will be available after the broadcast ends"
+        : "No recording uploaded yet";
+    } else if (!isLive) {
+      message = "Camera broadcast not started — admin must click Start Camera & Go Live";
+    } else {
+      message = "Waiting for camera broadcast…";
+    }
+  } else if (wantsRecording) {
+    message = "No recording available yet";
+  } else if (isLive) {
+    message = "No stream URL configured — add a YouTube or HLS URL in admin";
+  } else {
+    message = "Add a stream URL in admin, then click Go Live";
+  }
+
+  return (
+    <div className={`flex aspect-video items-center justify-center bg-black px-4 text-center text-sm text-slate-400 ${className}`}>
+      {message}
+    </div>
+  );
 }

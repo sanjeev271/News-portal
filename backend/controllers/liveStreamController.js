@@ -2,9 +2,14 @@ const LiveStream = require("../models/LiveStream");
 
 exports.getActiveStream = async (req, res) => {
   try {
-    const stream = await LiveStream.findOne({ status: "live" }).sort({ startedAt: -1 });
-    const latest = stream || await LiveStream.findOne({ status: "ended" }).sort({ endedAt: -1 });
-    res.json(latest);
+    const live = await LiveStream.findOne({ status: "live" }).sort({ startedAt: -1 });
+    if (live) return res.json(live);
+
+    const scheduled = await LiveStream.findOne({ status: "scheduled" }).sort({ createdAt: -1 });
+    if (scheduled) return res.json(scheduled);
+
+    const ended = await LiveStream.findOne({ status: "ended" }).sort({ endedAt: -1 });
+    res.json(ended);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -20,7 +25,15 @@ exports.getAllStreams = async (req, res) => {
 
 exports.createStream = async (req, res) => {
   try {
-    const stream = await LiveStream.create(req.body);
+    const streamType = req.body.streamType === "camera" ? "camera" : "url";
+    const stream = await LiveStream.create({
+      title: req.body.title,
+      description: req.body.description,
+      streamType,
+      streamUrl: streamType === "url" ? (req.body.streamUrl || "").trim() : "",
+      recordingUrl: (req.body.recordingUrl || "").trim(),
+      status: "scheduled",
+    });
     res.status(201).json(stream);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -40,7 +53,15 @@ exports.updateStream = async (req, res) => {
     }
 
     Object.assign(stream, req.body);
-    if (req.body.status === "live" && !stream.startedAt) stream.startedAt = new Date();
+
+    if (req.body.status === "live") {
+      if (!stream.startedAt) stream.startedAt = new Date();
+      if (stream.streamType === "camera") stream.streamUrl = "";
+      if (stream.streamType === "url" && req.body.streamUrl !== undefined) {
+        stream.streamUrl = String(req.body.streamUrl).trim();
+      }
+    }
+
     if (req.body.status === "ended") stream.endedAt = new Date();
 
     await stream.save();
@@ -69,6 +90,11 @@ exports.uploadRecording = async (req, res) => {
     const p = req.file.path.replace(/\\/g, "/");
     stream.recordingUrl = p.includes("/uploads/") ? p.slice(p.indexOf("uploads/")) : p;
     await stream.save();
+
+    const io = req.app.get("io");
+    const payload = stream.toObject ? stream.toObject() : stream;
+    if (io) io.emit("live_status", payload);
+
     res.json(stream);
   } catch (error) {
     res.status(500).json({ message: error.message });

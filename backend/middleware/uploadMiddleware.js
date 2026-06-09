@@ -3,6 +3,9 @@ const path = require("path");
 const multer = require("multer");
 const { UPLOAD_ROOT } = require("../utils/ensureUploadDirs");
 
+const maxMb = parseInt(process.env.MAX_FILE_SIZE_MB || "10", 10);
+const MAX_FILE_SIZE = maxMb * 1024 * 1024;
+
 ["news", "videos", "gallery"].forEach((dir) => {
   fs.mkdirSync(path.join(UPLOAD_ROOT, dir), { recursive: true });
 });
@@ -33,7 +36,14 @@ const fileFilter = (req, file, cb) => {
   cb(new Error("Only image files allowed"), false);
 };
 
-const upload = multer({ storage, fileFilter });
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: MAX_FILE_SIZE,
+    files: 12,
+  },
+});
 
 upload.toPublicPath = (absolutePath) => {
   if (!absolutePath) return null;

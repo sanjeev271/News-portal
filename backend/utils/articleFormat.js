@@ -1,4 +1,5 @@
 const slugify = require("slugify");
+const { sanitizeArticleHtml, sanitizePlainText } = require("./sanitizeHtml");
 
 function stripHtml(html = "") {
   return html.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
@@ -6,18 +7,20 @@ function stripHtml(html = "") {
 
 function normalizeContent(content, summary = "") {
   const text = (content || "").trim();
-  if (!text) return `<p>${summary || "Full story coming soon."}</p>`;
-  if (/<[a-z][\s\S]*>/i.test(text)) return text;
+  if (!text) return sanitizeArticleHtml(`<p>${summary || "Full story coming soon."}</p>`);
+  if (/<[a-z][\s\S]*>/i.test(text)) return sanitizeArticleHtml(text);
 
   const paragraphs = text.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
   if (paragraphs.length === 0) {
-    return text.split(/(?<=[.!?])\s+/).filter(Boolean).map((p) => `<p>${p}</p>`).join("");
+    return sanitizeArticleHtml(
+      text.split(/(?<=[.!?])\s+/).filter(Boolean).map((p) => `<p>${p}</p>`).join("")
+    );
   }
-  return paragraphs.map((p) => `<p>${p}</p>`).join("");
+  return sanitizeArticleHtml(paragraphs.map((p) => `<p>${p}</p>`).join(""));
 }
 
 function normalizeSummary(title, summary, content) {
-  const clean = (summary || "").trim();
+  const clean = sanitizePlainText(summary || "", 280);
   if (clean.length >= 20) return clean.slice(0, 280);
 
   const fromContent = stripHtml(content || "");
@@ -33,7 +36,7 @@ function defaultFeaturedImage(title, existing) {
 }
 
 function normalizeArticleFields(body, files, existing = {}) {
-  const title = (body.title || existing.title || "").trim();
+  const title = sanitizePlainText(body.title || existing.title || "", 200);
   const summary = normalizeSummary(title, body.summary, body.content);
   const content = normalizeContent(body.content, summary);
 
@@ -52,8 +55,8 @@ function normalizeArticleFields(body, files, existing = {}) {
     summary,
     content,
     featuredImage,
-    seoTitle: (body.seoTitle || title).trim(),
-    seoDescription: (body.seoDescription || summary).trim().slice(0, 160),
+    seoTitle: sanitizePlainText(body.seoTitle || title, 120),
+    seoDescription: sanitizePlainText(body.seoDescription || summary, 160),
   };
 }
 

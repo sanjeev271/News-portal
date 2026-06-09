@@ -8,28 +8,30 @@ export default function TrendingSidebar({ articles = [] }) {
   if (!articles.length) return null;
 
   return (
-    <section className="border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900 sm:p-5">
-      <h2 className="bbc-section-title mb-4 text-lg dark:text-white">{t("trendingNews")}</h2>
+    <section className="sidebar-card">
+      <h2 className="bbc-section-title mb-5 text-lg dark:text-white">{t("trendingNews")}</h2>
 
-      {/* Desktop / tablet list */}
-      <ol className="hidden space-y-4 sm:block">
+      <ol className="hidden space-y-1 sm:block">
         {articles.map((a, i) => (
-          <li key={a._id} className="flex gap-3 border-b border-slate-100 pb-4 last:border-0 dark:border-slate-800">
-            <span className="text-2xl font-black leading-none text-bbc-red">{i + 1}</span>
-            <div className="min-w-0 flex-1">
-              <Link
-                to={`/article/${a.slug}`}
-                className="line-clamp-3 text-sm font-bold leading-snug text-slate-900 hover:underline dark:text-white"
-              >
-                {a.title}
-              </Link>
-              <p className="mt-1 text-xs text-slate-400">{a.views} views</p>
-            </div>
+          <li key={a._id}>
+            <Link
+              to={`/article/${a.slug}`}
+              className="group flex gap-3 rounded-lg px-2 py-3 transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-sm font-black text-bbc-red dark:bg-red-950/40">
+                {i + 1}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="line-clamp-2 text-sm font-bold leading-snug text-slate-900 transition group-hover:text-bbc-red dark:text-white">
+                  {a.title}
+                </p>
+                <p className="mt-1 text-xs text-slate-400">{a.views} views</p>
+              </div>
+            </Link>
           </li>
         ))}
       </ol>
 
-      {/* Mobile horizontal scroll cards */}
       <div className="-mx-1 flex gap-3 overflow-x-auto pb-2 sm:hidden">
         {articles.map((a, i) => {
           const imageUrl = getImageUrl(a.featuredImage, a.title);
@@ -37,13 +39,13 @@ export default function TrendingSidebar({ articles = [] }) {
             <Link
               key={a._id}
               to={`/article/${a.slug}`}
-              className="w-44 shrink-0 overflow-hidden border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
+              className="w-44 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900"
             >
               <div
                 className={`h-24 bg-cover bg-center ${!imageUrl ? "bg-bbc-dark-grey" : ""}`}
                 style={imageUrl ? { backgroundImage: `url(${imageUrl})` } : {}}
               />
-              <div className="p-2">
+              <div className="p-2.5">
                 <span className="text-xs font-black text-bbc-red">#{i + 1}</span>
                 <p className="mt-1 line-clamp-2 text-xs font-bold text-slate-900 dark:text-white">{a.title}</p>
               </div>
@@ -52,7 +54,7 @@ export default function TrendingSidebar({ articles = [] }) {
         })}
       </div>
 
-      <Link to="/trending" className="mt-3 inline-block text-sm font-bold text-bbc-red hover:underline">
+      <Link to="/trending" className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-bbc-red transition hover:gap-2">
         View all trending →
       </Link>
     </section>

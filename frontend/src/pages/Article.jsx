@@ -5,8 +5,10 @@ import AdBanner from "../components/AdBanner";
 import CommentBox from "../components/CommentBox";
 import LikeButton from "../components/LikeButton";
 import BookmarkButton from "../components/BookmarkButton";
+import { PageLoader } from "../components/PageLoader";
 import socket from "../socket/socket";
 import { getImageUrl, formatTime } from "../utils/formatTime";
+import { sanitizeArticleHtml } from "../utils/sanitizeHtml";
 
 export default function Article() {
   const { slug } = useParams();
@@ -31,59 +33,84 @@ export default function Article() {
     };
   }, []);
 
-  if (loading) return <div className="flex min-h-64 items-center justify-center text-slate-400">Loading…</div>;
-  if (!article) return <div className="py-16 text-center"><Link to="/" className="font-bold text-bbc-red">Go home</Link></div>;
+  if (loading) return <PageLoader label="Loading article…" />;
+  if (!article) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-4">
+        <p className="text-slate-500">Article not found</p>
+        <Link to="/" className="btn-primary">Go home</Link>
+      </div>
+    );
+  }
 
   const imageUrl = getImageUrl(article.featuredImage, article.title);
   const videoUrl = getImageUrl(article.videoUrl);
+  const safeContent = sanitizeArticleHtml(article.content);
 
   return (
-    <div className="bg-white dark:bg-slate-950">
-      <article className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        <div className="grid gap-8 lg:grid-cols-3">
+    <div className="animate-fade-up bg-slate-50 dark:bg-slate-950">
+      <article className="mx-auto max-w-7xl px-3 py-5 sm:px-6 sm:py-8 lg:py-12">
+        <div className="grid gap-10 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <Link to="/" className="text-sm font-bold text-bbc-red hover:underline">← Home</Link>
+            <nav className="mb-6 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+              <Link to="/" className="font-semibold text-bbc-red hover:underline">Home</Link>
+              {article.category?.name && (
+                <>
+                  <span>/</span>
+                  <Link to={`/category/${article.category.slug}`} className="hover:text-slate-700 dark:hover:text-slate-300">
+                    {article.category.name}
+                  </Link>
+                </>
+              )}
+            </nav>
 
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mb-4 flex flex-wrap gap-2">
               {article.isBreaking && (
-                <span className="bg-bbc-red px-2 py-0.5 text-xs font-black uppercase tracking-wider text-white">Breaking</span>
+                <span className="rounded-full bg-bbc-red px-3 py-0.5 text-xs font-black uppercase tracking-wider text-white">Breaking</span>
               )}
               {article.mediaType === "video" && (
-                <span className="border border-slate-300 px-2 py-0.5 text-xs font-bold uppercase text-slate-600">Video</span>
+                <span className="rounded-full border border-slate-300 px-3 py-0.5 text-xs font-bold uppercase text-slate-600 dark:border-slate-600 dark:text-slate-300">Video</span>
               )}
               {article.mediaType === "gallery" && (
-                <span className="border border-slate-300 px-2 py-0.5 text-xs font-bold uppercase text-slate-600">Gallery</span>
-              )}
-              {article.category?.name && (
-                <span className="text-xs font-bold uppercase tracking-widest text-bbc-red">{article.category.name}</span>
+                <span className="rounded-full border border-slate-300 px-3 py-0.5 text-xs font-bold uppercase text-slate-600 dark:border-slate-600 dark:text-slate-300">Gallery</span>
               )}
             </div>
 
-            <h1 className="mt-4 text-3xl font-extrabold leading-tight text-slate-900 dark:text-white sm:text-4xl">
+            <h1 className="text-2xl font-extrabold leading-tight tracking-tight text-slate-900 dark:text-white sm:text-4xl lg:text-5xl">
               {article.title}
             </h1>
-            <p className="mt-3 text-sm text-slate-500">
-              By <span className="font-semibold text-slate-700 dark:text-slate-300">{article.author?.name}</span>
-              {" · "}{article.views} views · {formatTime(article.createdAt)}
-            </p>
+
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-500">
+              <span className="font-semibold text-slate-700 dark:text-slate-300">{article.author?.name}</span>
+              <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline" />
+              <span>{article.views} views</span>
+              <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline" />
+              <span>{formatTime(article.createdAt)}</span>
+            </div>
 
             {videoUrl ? (
-              <video src={videoUrl} controls className="my-6 w-full" />
+              <div className="media-frame my-8">
+                <video src={videoUrl} controls className="w-full" playsInline />
+              </div>
             ) : (
-              <div
-                className={`my-6 h-64 bg-cover bg-center sm:h-96 ${!imageUrl ? "bg-bbc-dark-grey" : ""}`}
-                style={imageUrl ? { backgroundImage: `url(${imageUrl})` } : {}}
-              />
+              <div className={`media-frame my-8 overflow-hidden ${!imageUrl ? "bg-bbc-dark-grey" : ""}`}>
+                {imageUrl && (
+                  <div
+                    className="h-64 bg-cover bg-center sm:h-[28rem] lg:h-[32rem]"
+                    style={{ backgroundImage: `url(${imageUrl})` }}
+                  />
+                )}
+              </div>
             )}
 
             {article.gallery?.length > 0 && (
-              <div className="mb-6">
+              <div className="mb-8">
                 <h3 className="bbc-section-title mb-4 text-lg dark:text-white">Photo Gallery</h3>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2">
                   {article.gallery.map((img, i) => (
-                    <figure key={i}>
-                      <img src={getImageUrl(img.url)} alt={img.caption || ""} className="w-full object-cover" />
-                      {img.caption && <figcaption className="mt-1 text-sm text-slate-500">{img.caption}</figcaption>}
+                    <figure key={i} className="overflow-hidden rounded-xl">
+                      <img src={getImageUrl(img.url)} alt={img.caption || ""} className="w-full object-cover transition hover:scale-[1.02]" />
+                      {img.caption && <figcaption className="mt-2 text-sm text-slate-500">{img.caption}</figcaption>}
                     </figure>
                   ))}
                 </div>
@@ -91,11 +118,11 @@ export default function Article() {
             )}
 
             <div
-              className="prose prose-slate max-w-none text-lg leading-relaxed dark:prose-invert"
-              dangerouslySetInnerHTML={{ __html: article.content }}
+              className="prose prose-slate max-w-none leading-relaxed dark:prose-invert sm:prose-lg"
+              dangerouslySetInnerHTML={{ __html: safeContent }}
             />
 
-            <div className="my-8 flex flex-wrap items-center gap-4 border-y border-slate-200 py-5 dark:border-slate-700">
+            <div className="my-10 flex flex-wrap items-center gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <LikeButton articleId={article._id} initialLikes={article.likes ?? 0} onLiked={(likes) => setArticle((p) => ({ ...p, likes }))} />
               <BookmarkButton articleId={article._id} />
             </div>
@@ -103,7 +130,7 @@ export default function Article() {
             <CommentBox articleId={article._id} />
           </div>
 
-          <aside className="space-y-6">
+          <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
             <AdBanner placement="sidebar" />
             <AdBanner placement="inline" />
           </aside>

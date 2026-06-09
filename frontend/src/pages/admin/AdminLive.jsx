@@ -46,12 +46,13 @@ export default function AdminLive() {
   }, []);
 
   useEffect(() => {
-    socket.on("live_status", (data) => {
+    const onLiveStatus = (data) => {
       setStreams((prev) => prev.map((s) => (s._id === data._id ? data : s)));
-      if (selected?._id === data._id) setSelected(data);
-    });
-    return () => socket.off("live_status");
-  }, [selected?._id]);
+      setSelected((prev) => (prev?._id === data._id ? data : prev));
+    };
+    socket.on("live_status", onLiveStatus);
+    return () => socket.off("live_status", onLiveStatus);
+  }, []);
 
   useEffect(() => {
     if (cameraActive) attachLocalPreview();
@@ -93,13 +94,18 @@ export default function AdminLive() {
   const goLiveWithCamera = async (stream) => {
     setCameraError("");
     setSelected(stream);
+    setPreviewMode("live");
     setCameraActive(true);
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     try {
       const cleanup = await startBroadcast(stream._id);
       cleanupRef.current = cleanup;
       attachLocalPreview();
-      const res = await API.put(`/live/${stream._id}`, { status: "live", streamType: "camera" });
+      const res = await API.put(`/live/${stream._id}`, {
+        status: "live",
+        streamType: "camera",
+        streamUrl: "",
+      });
       setSelected(res.data);
       load();
     } catch (err) {
@@ -127,7 +133,13 @@ export default function AdminLive() {
   };
 
   const goLiveUrl = async (id) => {
-    await API.put(`/live/${id}`, { status: "live" });
+    const target = streams.find((s) => s._id === id);
+    await API.put(`/live/${id}`, {
+      status: "live",
+      streamType: "url",
+      streamUrl: target?.streamUrl || "",
+    });
+    setPreviewMode("live");
     load();
   };
 
@@ -164,11 +176,6 @@ export default function AdminLive() {
       setUploading(false);
     }
   };
-
-  const previewUrl =
-    previewMode === "live" ? selected?.streamUrl :
-    previewMode === "recording" ? selected?.recordingUrl :
-    selected?.status === "live" ? selected?.streamUrl : selected?.recordingUrl;
 
   const testCamera = async () => {
     setCameraError("");
@@ -258,7 +265,11 @@ export default function AdminLive() {
                 onClick={() => {
                   setSelected(s);
                   setPreviewMode(
-                    s.status === "live" || s.streamType === "camera" ? "live" : "recording"
+                    s.status === "live" || (s.streamType === "url" && s.streamUrl)
+                      ? "live"
+                      : s.recordingUrl
+                        ? "recording"
+                        : "live"
                   );
                 }}
                 className={`cursor-pointer border p-4 transition dark:border-slate-700 ${
@@ -309,17 +320,17 @@ export default function AdminLive() {
           {selected ? (
             <>
               <div className="mb-3 flex flex-wrap gap-2">
-                {(selected.streamUrl || selected.streamType === "camera") && (
+                {(selected.streamType === "camera" || selected.streamUrl) && (
                   <button
                     onClick={() => setPreviewMode("live")}
                     className={`px-3 py-1.5 text-xs font-bold ${
                       previewMode === "live" ? "bg-bbc-red text-white" : "border border-slate-300 dark:border-slate-600"
                     }`}
                   >
-                    Live Stream
+                    {selected.streamType === "camera" ? "Live Camera" : "Live Stream"}
                   </button>
                 )}
-                {selected.recordingUrl && (
+                {(selected.recordingUrl || (selected.streamType === "camera" && selected.status === "ended")) && (
                   <button
                     onClick={() => setPreviewMode("recording")}
                     className={`px-3 py-1.5 text-xs font-bold ${
@@ -338,7 +349,7 @@ export default function AdminLive() {
                   <LocalCameraPreview videoRef={localVideoRef} onVideoMount={attachLocalPreview} />
                 </div>
               ) : (
-                <LiveStreamView stream={selected} url={previewUrl} mode={previewMode} className="mb-4" />
+                <LiveStreamView stream={selected} mode={previewMode} className="mb-4" />
               )}
 
               <h3 className="text-lg font-bold dark:text-white">{selected.title}</h3>

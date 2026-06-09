@@ -35,8 +35,10 @@ export default function Login() {
   };
 
   return (
-    <div className="mx-auto max-w-md px-6 py-16">
-      <h2 className="mb-6 text-2xl font-bold text-slate-900 dark:text-white">Login</h2>
+    <div className="flex min-h-[60vh] items-center justify-center px-3 py-8 sm:px-4 sm:py-12">
+      <div className="card-surface w-full max-w-md p-6 sm:p-10">
+      <h2 className="mb-2 text-2xl font-extrabold text-slate-900 dark:text-white">Welcome back</h2>
+      <p className="mb-6 text-sm text-slate-500">Sign in to bookmark stories and join the conversation.</p>
 
       {loggedInUser ? (
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-center dark:border-emerald-900 dark:bg-emerald-950/30">
@@ -60,7 +62,7 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-bbc-red focus:ring-2 focus:ring-red-100 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:ring-red-900/30"
             />
             <input
               type="password"
@@ -68,7 +70,7 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-bbc-red focus:ring-2 focus:ring-red-100 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:ring-red-900/30"
             />
             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
               <input
@@ -78,18 +80,16 @@ export default function Login() {
               />
               Remember email on this device
             </label>
-            <button
-              type="submit"
-              className="w-full rounded-xl bg-blue-600 py-3 font-semibold text-white hover:bg-blue-700"
-            >
+            <button type="submit" className="btn-primary w-full py-3">
               Login
             </button>
           </form>
-          <p className="mt-4 text-center text-sm text-slate-500">
-            No account? <Link to="/register" className="text-blue-600 hover:underline">Register</Link>
+          <p className="mt-6 text-center text-sm text-slate-500">
+            No account? <Link to="/register" className="font-bold text-bbc-red hover:underline">Register</Link>
           </p>
         </>
       )}
+      </div>
     </div>
   );
 }

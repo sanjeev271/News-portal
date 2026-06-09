@@ -4,6 +4,7 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import MobileBottomNav from "./components/MobileBottomNav";
 import AdminLayout from "./components/admin/AdminLayout";
 import Home from "./pages/Home";
 import Article from "./pages/Article";
@@ -44,9 +45,9 @@ function AppShell() {
   const isAdmin = location.pathname.startsWith("/admin");
 
   return (
-    <div className="flex min-h-screen flex-col bg-white dark:bg-slate-950">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <Navbar />
-      <main className="flex-1">
+      <main className={`flex-1 ${!isAdmin ? "main-mobile-pad" : ""}`}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/article/:slug" element={<Article />} />
@@ -72,7 +73,14 @@ function AppShell() {
           </Route>
         </Routes>
       </main>
-      {!isAdmin && <Footer />}
+      {!isAdmin && (
+        <>
+          <div className="hidden md:block">
+            <Footer />
+          </div>
+          <MobileBottomNav />
+        </>
+      )}
     </div>
   );
 }

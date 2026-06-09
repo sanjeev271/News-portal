@@ -80,19 +80,19 @@ export default function CommentBox({ articleId }) {
       </div>
 
       {user ? (
-        <div className="mb-5 flex gap-2">
+        <div className="mb-5 flex flex-col gap-2 sm:flex-row">
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Share your thoughts…"
             disabled={sending}
-            className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            className="min-h-[48px] flex-1 rounded-xl border border-slate-200 px-4 py-3 text-base outline-none focus:border-bbc-red focus:ring-2 focus:ring-red-100 dark:border-slate-600 dark:bg-slate-800 dark:text-white sm:text-sm"
           />
           <button
             onClick={sendComment}
             disabled={sending || !text.trim()}
-            className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+            className="btn-primary min-h-[48px] w-full px-5 py-3 sm:w-auto"
           >
             {sending ? "…" : "Post"}
           </button>
