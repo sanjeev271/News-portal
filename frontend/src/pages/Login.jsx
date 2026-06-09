@@ -88,13 +88,6 @@ export default function Login() {
           <p className="mt-4 text-center text-sm text-slate-500">
             No account? <Link to="/register" className="text-blue-600 hover:underline">Register</Link>
           </p>
-          <p className="mt-6 rounded-lg bg-amber-50 px-4 py-3 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
-            Default logins are stored in <strong>backend/data/users.json</strong>
-            <br />
-            Admin: <strong>admin@newsportal.com</strong> / <strong>admin123</strong>
-            <br />
-            Reader: <strong>reader@newsportal.com</strong> / <strong>reader123</strong>
-          </p>
         </>
       )}
     </div>
