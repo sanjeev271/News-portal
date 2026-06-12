@@ -28,9 +28,11 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
   if (file.fieldname === "video" || file.fieldname === "recording") {
-    return file.mimetype.startsWith("video/")
-      ? cb(null, true)
-      : cb(new Error("Only video files allowed"), false);
+    const ok =
+      file.mimetype.startsWith("video/") ||
+      file.mimetype === "application/octet-stream" ||
+      file.mimetype === "binary/octet-stream";
+    return ok ? cb(null, true) : cb(new Error("Only video files allowed"), false);
   }
   if (file.mimetype.startsWith("image/")) return cb(null, true);
   cb(new Error("Only image files allowed"), false);

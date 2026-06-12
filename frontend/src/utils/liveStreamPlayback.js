@@ -1,6 +1,5 @@
 import { isYoutubeUrl } from "./youtubeUrl";
 
-/** http(s) link — YouTube, HLS page, etc. */
 export function isExternalStreamUrl(url) {
   if (!url || typeof url !== "string") return false;
   const trimmed = url.trim();
@@ -11,12 +10,20 @@ function hasExternalStreamUrl(url) {
   return isExternalStreamUrl(url) || isYoutubeUrl(url);
 }
 
-/**
- * Resolve what to play.
- * - Camera + live  → WebRTC (no URL), unless streamUrl is an external link
- * - Camera + replay → recordingUrl only (uploaded .webm or optional link)
- * - URL type       → streamUrl when live, recordingUrl when replay (with fallbacks)
- */
+function pickStreamUrl(stream, wantsRecording) {
+  if (!stream) return null;
+
+  if (wantsRecording) {
+    return stream.recordingUrl || stream.streamUrl || stream.hlsUrl || stream.youtubeUrl || stream.iframeUrl || null;
+  }
+
+  if (stream.streamType === "youtube" && stream.youtubeUrl) return stream.youtubeUrl;
+  if (stream.streamType === "hls" && stream.hlsUrl) return stream.hlsUrl;
+  if (stream.streamType === "iframe" && stream.iframeUrl) return stream.iframeUrl;
+
+  return stream.streamUrl || stream.youtubeUrl || stream.hlsUrl || stream.iframeUrl || stream.recordingUrl || null;
+}
+
 export function resolvePlaybackUrl(stream, mode = "auto") {
   if (!stream) return null;
 
@@ -24,22 +31,14 @@ export function resolvePlaybackUrl(stream, mode = "auto") {
   const wantsRecording = mode === "recording" || (mode === "auto" && !isLive);
 
   if (stream.streamType === "camera") {
-    if (wantsRecording) {
-      return stream.recordingUrl || null;
-    }
-    if (hasExternalStreamUrl(stream.streamUrl)) {
-      return stream.streamUrl.trim();
-    }
+    if (wantsRecording) return stream.recordingUrl || null;
+    if (hasExternalStreamUrl(stream.streamUrl)) return stream.streamUrl.trim();
     return null;
   }
 
-  if (wantsRecording) {
-    return stream.recordingUrl || stream.streamUrl || null;
-  }
-  return stream.streamUrl || stream.recordingUrl || null;
+  return pickStreamUrl(stream, wantsRecording);
 }
 
-/** WebRTC only for live camera broadcasts without an external streamUrl. */
 export function shouldUseWebRtcCamera(stream, mode = "auto") {
   if (!stream || stream.streamType !== "camera") return false;
 

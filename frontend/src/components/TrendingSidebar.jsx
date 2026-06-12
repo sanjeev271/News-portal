@@ -1,61 +1,64 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { getImageUrl } from "../utils/formatTime";
+import { dedupeById } from "../utils/localize";
 
 export default function TrendingSidebar({ articles = [] }) {
   const { t } = useTranslation();
+  const items = dedupeById(articles);
 
-  if (!articles.length) return null;
+  if (!items.length) return null;
 
   return (
     <section className="sidebar-card">
-      <h2 className="bbc-section-title mb-5 text-lg dark:text-white">{t("trendingNews")}</h2>
+      <h2 className="section-title mb-5 text-base">{t("trendingNews")}</h2>
 
-      <ol className="hidden space-y-1 sm:block">
-        {articles.map((a, i) => (
-          <li key={a._id}>
+      <ol className="hidden space-y-0 sm:block">
+        {items.map((a, i) => (
+          <li key={a._id} className="border-b border-slate-100 last:border-0 dark:border-slate-800">
             <Link
               to={`/article/${a.slug}`}
-              className="group flex gap-3 rounded-lg px-2 py-3 transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
+              className="group flex gap-3 py-3 transition hover:bg-slate-50 dark:hover:bg-slate-800/40"
             >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-sm font-black text-bbc-red dark:bg-red-950/40">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center text-sm font-bold tabular-nums text-news-red">
                 {i + 1}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="line-clamp-2 text-sm font-bold leading-snug text-slate-900 transition group-hover:text-bbc-red dark:text-white">
+                <p className="text-title font-serif line-clamp-2 text-slate-900 transition group-hover:text-news-red dark:text-white">
                   {a.title}
                 </p>
-                <p className="mt-1 text-xs text-slate-400">{a.views} views</p>
+                <p className="text-meta mt-1">{a.views} {t("views")}</p>
               </div>
             </Link>
           </li>
         ))}
       </ol>
 
-      <div className="-mx-1 flex gap-3 overflow-x-auto pb-2 sm:hidden">
-        {articles.map((a, i) => {
+      <div className="chip-scroll pb-1 sm:hidden">
+        {items.map((a, i) => {
           const imageUrl = getImageUrl(a.featuredImage, a.title);
           return (
             <Link
               key={a._id}
               to={`/article/${a.slug}`}
-              className="w-44 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900"
+              className="news-card w-[72vw] max-w-[260px] shrink-0 snap-start overflow-hidden"
             >
-              <div
-                className={`h-24 bg-cover bg-center ${!imageUrl ? "bg-bbc-dark-grey" : ""}`}
-                style={imageUrl ? { backgroundImage: `url(${imageUrl})` } : {}}
-              />
-              <div className="p-2.5">
-                <span className="text-xs font-black text-bbc-red">#{i + 1}</span>
-                <p className="mt-1 line-clamp-2 text-xs font-bold text-slate-900 dark:text-white">{a.title}</p>
+              <div className={`relative aspect-[16/10] w-full ${!imageUrl ? "bg-news-dark-grey" : ""}`}>
+                {imageUrl && (
+                  <img src={imageUrl} alt="" aria-hidden loading="lazy" className="h-full w-full object-cover" />
+                )}
+              </div>
+              <div className="p-3">
+                <span className="text-label text-news-red">#{i + 1}</span>
+                <p className="text-title mt-1 line-clamp-2">{a.title}</p>
               </div>
             </Link>
           );
         })}
       </div>
 
-      <Link to="/trending" className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-bbc-red transition hover:gap-2">
-        View all trending →
+      <Link to="/trending" className="text-body-sm mt-4 inline-flex font-semibold text-link hover:text-link-hover">
+        {t("viewAllTrending")} →
       </Link>
     </section>
   );

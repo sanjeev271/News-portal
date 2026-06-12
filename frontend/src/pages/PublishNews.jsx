@@ -11,6 +11,7 @@ import {
   normalizeContent,
   normalizeSummary,
 } from "../utils/articleFormat";
+import LanguageField, { LanguageBadge } from "../components/admin/LanguageField";
 
 export default function PublishNews() {
   const navigate = useNavigate();
@@ -24,8 +25,9 @@ export default function PublishNews() {
     category: "",
     status: "published",
     isBreaking: false,
+    isFeatured: false,
     mediaType: "article",
-    locale: "en",
+    locale: "ne",
     seoTitle: "",
     seoDescription: "",
     keywords: "",
@@ -93,6 +95,7 @@ export default function PublishNews() {
         mediaType: form.mediaType,
         locale: form.locale,
         isBreaking: form.isBreaking,
+        isFeatured: form.isFeatured,
         seoTitle: form.seoTitle || form.title,
         seoDescription: form.seoDescription || summary.slice(0, 160),
         keywords: form.keywords || undefined,
@@ -131,8 +134,9 @@ export default function PublishNews() {
         category: form.category,
         status: "published",
         isBreaking: false,
+        isFeatured: false,
         mediaType: "article",
-        locale: "en",
+        locale: form.locale,
         seoTitle: "",
         seoDescription: "",
         keywords: "",
@@ -157,7 +161,7 @@ export default function PublishNews() {
         <RoleBadge role="admin" />
       </div>
       <p className="mb-6 text-sm text-slate-500">
-        Articles are auto-formatted like seed data — featured image, summary, and HTML content.
+        Publish in Nepali or English. Readers see articles matching their selected site language (NE / EN in the navbar).
       </p>
 
       {error && <div className="mb-4 border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
@@ -170,12 +174,17 @@ export default function PublishNews() {
 
       <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
         <form onSubmit={handleSubmit} className="relative z-10 space-y-4">
+          <LanguageField
+            label="Article language"
+            value={form.locale}
+            onChange={handleChange}
+          />
           <input
             name="title"
             value={form.title}
             onChange={handleChange}
             onBlur={autoFillSeo}
-            placeholder="Headline *"
+            placeholder={form.locale === "ne" ? "शीर्षक *" : "Headline *"}
             required
             className="w-full border px-4 py-3 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
           />
@@ -183,14 +192,14 @@ export default function PublishNews() {
             name="summary"
             value={form.summary}
             onChange={handleChange}
-            placeholder="Summary (auto-generated from content if left empty)"
+            placeholder={form.locale === "ne" ? "सारांश (खाली छोड्न सकिन्छ)" : "Summary (auto-generated from content if left empty)"}
             rows={2}
             className="w-full border px-4 py-3 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
           />
           <RichTextEditor
             value={form.content}
             onChange={(html) => setForm((p) => ({ ...p, content: html }))}
-            placeholder="Full story — plain text is converted to paragraphs like seed articles"
+            placeholder={form.locale === "ne" ? "पूरा समाचार लेख्नुहोस्" : "Full story — plain text is converted to paragraphs like seed articles"}
           />
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -224,15 +233,6 @@ export default function PublishNews() {
             >
               <option value="published">Publish Now</option>
               <option value="draft">Save Draft</option>
-            </select>
-            <select
-              name="locale"
-              value={form.locale}
-              onChange={handleChange}
-              className="border px-4 py-3 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-            >
-              <option value="en">English</option>
-              <option value="hi">Hindi</option>
             </select>
           </div>
 
@@ -300,6 +300,10 @@ export default function PublishNews() {
             <input type="checkbox" name="isBreaking" checked={form.isBreaking} onChange={handleChange} />
             Breaking News
           </label>
+          <label className="flex items-center gap-2 text-sm dark:text-slate-300">
+            <input type="checkbox" name="isFeatured" checked={form.isFeatured} onChange={handleChange} />
+            Featured story (homepage hero)
+          </label>
 
           <button
             type="submit"
@@ -317,6 +321,7 @@ export default function PublishNews() {
             categoryName={categoryName}
             imageUrl={previewImage}
             isBreaking={form.isBreaking}
+            locale={form.locale}
           />
         </div>
       </div>

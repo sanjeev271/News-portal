@@ -1,9 +1,15 @@
 import useWebRTCViewer from "../hooks/useWebRTCViewer";
 import { playVideoStream } from "../utils/playVideoStream";
 
+function assignRef(ref, node) {
+  if (!ref) return;
+  if (typeof ref === "function") ref(node);
+  else if ("current" in ref) ref.current = node;
+}
+
 export function LocalCameraPreview({ videoRef, className = "", onVideoMount }) {
   const setRef = (node) => {
-    if (videoRef && "current" in videoRef) videoRef.current = node;
+    assignRef(videoRef, node);
     if (node) onVideoMount?.();
   };
 
@@ -26,11 +32,18 @@ export default function CameraPlayer({
   active,
   className = "",
   label = "Connecting to live camera…",
+  videoRef: externalVideoRef,
+  muted = true,
 }) {
   const { remoteVideoRef, connected, needsTap, error, tapToPlay } = useWebRTCViewer(
     streamId ? String(streamId) : null,
     active
   );
+
+  const setVideoRef = (node) => {
+    assignRef(remoteVideoRef, node);
+    assignRef(externalVideoRef, node);
+  };
 
   const handleTap = async () => {
     if (needsTap) {
@@ -46,16 +59,15 @@ export default function CameraPlayer({
   return (
     <div className={`relative aspect-video min-h-[200px] overflow-hidden bg-black ${className}`}>
       <video
-        ref={remoteVideoRef}
+        ref={setVideoRef}
         autoPlay
         playsInline
-        muted
+        muted={muted}
         className="h-full w-full bg-black object-contain"
         style={{ WebkitPlaysinline: "true" }}
-        onClick={handleTap}
       />
       {active && connected && !needsTap && (
-        <div className="pointer-events-none absolute left-3 top-3">
+        <div className="pointer-events-none absolute left-3 top-3 z-10">
           <span className="bbc-live-badge">Live</span>
         </div>
       )}
@@ -63,13 +75,13 @@ export default function CameraPlayer({
         <button
           type="button"
           onClick={handleTap}
-          className="absolute inset-0 flex items-center justify-center bg-black/50 text-sm font-bold text-white"
+          className="absolute inset-0 z-10 flex items-center justify-center bg-black/50 text-sm font-bold text-white"
         >
           Tap to play live stream
         </button>
       )}
       {active && !connected && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/80 px-4 text-center text-sm text-white">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-black/80 px-4 text-center text-sm text-white">
           <p>{error || label}</p>
           {error && (
             <button

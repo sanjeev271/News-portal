@@ -1,38 +1,33 @@
-const express =
-require("express");
-
-const router =
-express.Router();
-
+const express = require("express");
+const router = express.Router();
+const auth = require("../middleware/authMiddleware");
+const { validateBody } = require("../validators");
 const {
   register,
   login,
-  profile
-} =
-require(
-"../controllers/authController"
-);
-
-const auth =
-require(
-"../middleware/authMiddleware"
-);
+  refresh,
+  logout,
+  profile,
+  updateProfile,
+} = require("../controllers/authController");
 
 router.post(
-"/register",
-register
+  "/register",
+  validateBody(["name", "email", "password"], {
+    email: { type: "email" },
+    password: { minLength: 6 },
+    name: { minLength: 2, maxLength: 80 },
+  }),
+  register
 );
-
 router.post(
-"/login",
-login
+  "/login",
+  validateBody(["email", "password"], { email: { type: "email" } }),
+  login
 );
+router.post("/refresh", refresh);
+router.post("/logout", logout);
+router.get("/profile", auth, profile);
+router.put("/profile", auth, updateProfile);
 
-router.get(
-"/profile",
-auth,
-profile
-);
-
-module.exports =
-router;
+module.exports = router;

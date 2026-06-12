@@ -1,7 +1,41 @@
 const User = require("../models/User");
+const RefreshToken = require("../models/RefreshToken");
 const bcrypt = require("bcryptjs");
-const generateToken = require("../utils/generateToken");
+const generateAccessToken = require("../utils/generateToken");
+const {
+  generateRefreshTokenValue,
+  getRefreshExpiry,
+} = require("../utils/generateToken");
 const userFileStore = require("../utils/userFileStore");
+
+async function issueTokens(user, req) {
+  const accessToken = generateAccessToken(user._id, user.role);
+  const refreshValue = generateRefreshTokenValue();
+
+  await RefreshToken.create({
+    user: user._id,
+    token: refreshValue,
+    expiresAt: getRefreshExpiry(),
+    userAgent: req.headers["user-agent"],
+    ipAddress: req.ip,
+  });
+
+  return { accessToken, refreshToken: refreshValue };
+}
+
+function authResponse(user, tokens) {
+  return {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    avatar: user.avatar,
+    theme: user.theme,
+    language: user.language,
+    token: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+  };
+}
 
 exports.register = async (req, res) => {
   try {
@@ -38,13 +72,8 @@ exports.register = async (req, res) => {
       role: "user",
     });
 
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id, user.role),
-    });
+    const tokens = await issueTokens(user, req);
+    res.status(201).json(authResponse(user, tokens));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -67,31 +96,94 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "Invalid Credentials" });
     }
 
+    if (user.status !== "active") {
+      return res.status(403).json({ message: "Account is not active" });
+    }
+
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
       return res.status(401).json({ message: "Invalid Credentials" });
     }
 
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id, user.role),
-    });
+    user.lastLogin = new Date();
+    await user.save();
+
+    const tokens = await issueTokens(user, req);
+    res.json(authResponse(user, tokens));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.refresh = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res.status(400).json({ message: "Refresh token required" });
+    }
+
+    const stored = await RefreshToken.findOne({ token: refreshToken, revokedAt: null });
+    if (!stored || stored.expiresAt < new Date()) {
+      return res.status(401).json({ message: "Invalid or expired refresh token" });
+    }
+
+    const user = await User.findById(stored.user);
+    if (!user || user.status !== "active") {
+      return res.status(401).json({ message: "User not found or inactive" });
+    }
+
+    stored.revokedAt = new Date();
+    await stored.save();
+
+    const tokens = await issueTokens(user, req);
+    res.json(authResponse(user, tokens));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.logout = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (refreshToken) {
+      await RefreshToken.updateOne({ token: refreshToken }, { revokedAt: new Date() });
+    }
+    res.json({ message: "Logged out successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
 exports.profile = async (req, res) => {
-  const user = await User.findById(req.user.id).select("-password");
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
-  }
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-  res.json({
-    ...user.toObject(),
-    token: generateToken(user._id, user.role),
-  });
+    const accessToken = generateAccessToken(user._id, user.role);
+    res.json({
+      ...user.toObject(),
+      token: accessToken,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (req.body.name) user.name = req.body.name;
+    if (req.body.avatar !== undefined) user.avatar = req.body.avatar;
+    if (req.body.language) user.language = req.body.language;
+    if (req.body.theme) user.theme = req.body.theme;
+
+    await user.save();
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };

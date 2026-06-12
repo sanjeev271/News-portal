@@ -9,6 +9,11 @@ new mongoose.Schema(
     unique:true
   },
 
+  nameNe:{
+    type:String,
+    default:""
+  },
+
   slug:{
     type:String,
     required:true,

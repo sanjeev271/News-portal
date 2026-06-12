@@ -1,6 +1,7 @@
 import { getImageUrl } from "../utils/formatTime";
+import { LanguageBadge } from "./admin/LanguageField";
 
-export default function ArticlePublishPreview({ title, summary, categoryName, imageUrl, isBreaking }) {
+export default function ArticlePublishPreview({ title, summary, categoryName, imageUrl, isBreaking, locale = "ne" }) {
   if (!title) return null;
 
   return (
@@ -14,6 +15,7 @@ export default function ArticlePublishPreview({ title, summary, categoryName, im
       />
       <div className="p-4">
         <div className="mb-2 flex gap-2">
+          <LanguageBadge locale={locale} />
           {isBreaking && (
             <span className="bg-bbc-red px-2 py-0.5 text-[10px] font-black uppercase text-white">Breaking</span>
           )}

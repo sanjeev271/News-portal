@@ -4,59 +4,53 @@ const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true
+      required: true,
     },
 
     email: {
       type: String,
       required: true,
-      unique: true
+      unique: true,
     },
 
     password: {
       type: String,
-      required: true
+      required: true,
     },
 
     role: {
       type: String,
-      enum: [
-        "admin",
-        "editor",
-        "reporter",
-        "user"
-      ],
-      default: "user"
+      enum: ["admin", "reporter", "user"],
+      default: "user",
     },
 
     avatar: {
       type: String,
-      default: ""
+      default: "",
     },
 
     status: {
       type: String,
-      default: "active"
+      enum: ["active", "inactive", "suspended"],
+      default: "active",
     },
+
+    lastLogin: Date,
 
     theme: {
       type: String,
       enum: ["light", "dark"],
-      default: "light"
+      default: "light",
     },
 
     language: {
       type: String,
-      default: "en"
-    }
+      default: "en",
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
-module.exports =
-mongoose.model(
-  "User",
-  userSchema
-);
+module.exports = mongoose.model("User", userSchema);

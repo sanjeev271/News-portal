@@ -64,6 +64,16 @@ export default function useWebRTCBroadcast() {
 
   const connectViewer = useCallback(async (viewerId) => {
     try {
+      const existing = peersRef.current.get(viewerId);
+      if (
+        existing &&
+        (existing.connectionState === "connected" ||
+          existing.connectionState === "connecting" ||
+          existing.signalingState === "have-local-offer")
+      ) {
+        return;
+      }
+
       const pc = attachTracks(viewerId);
       if (!pc) return;
       const offer = await pc.createOffer();
@@ -101,7 +111,12 @@ export default function useWebRTCBroadcast() {
     };
     const onAnswer = async ({ answer, viewerId }) => {
       const pc = peersRef.current.get(viewerId);
-      if (pc) await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      if (!pc || pc.signalingState !== "have-local-offer") return;
+      try {
+        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      } catch (err) {
+        console.warn("WebRTC answer ignored:", err.message);
+      }
     };
     const onIce = async ({ candidate, fromId }) => {
       const pc = peersRef.current.get(fromId);

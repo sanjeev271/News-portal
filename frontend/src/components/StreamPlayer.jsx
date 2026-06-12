@@ -6,7 +6,14 @@ import {
   toYoutubeWatchUrl,
 } from "../utils/youtubeUrl";
 
-export default function StreamPlayer({ url, title = "Stream", className = "" }) {
+export default function StreamPlayer({
+  url,
+  title = "Stream",
+  className = "",
+  videoRef,
+  hideNativeControls = false,
+  muted = false,
+}) {
   const youtubeEmbed = useMemo(
     () => (url && isYoutubeUrl(url) ? toYoutubeEmbedUrl(url) : null),
     [url]
@@ -66,7 +73,14 @@ export default function StreamPlayer({ url, title = "Stream", className = "" }) 
         </div>
       ) : isVideoFile ? (
         <div className="aspect-video overflow-hidden bg-black">
-          <video src={getImageUrl(url)} controls className="h-full w-full" playsInline />
+          <video
+            ref={videoRef}
+            src={getImageUrl(url)}
+            controls={!hideNativeControls}
+            muted={muted}
+            className="h-full w-full"
+            playsInline
+          />
         </div>
       ) : (
         <div className="aspect-video overflow-hidden bg-black">

@@ -91,6 +91,7 @@ export default function useWebRTCViewer(streamId, enabled) {
 
     handlers.onOffer = async ({ offer, broadcasterId }) => {
       if (!active) return;
+      if (connectedRef.current || pcRef.current?.connectionState === "connected") return;
       try {
         broadcasterIdRef.current = broadcasterId;
         pcRef.current?.close();
@@ -145,6 +146,7 @@ export default function useWebRTCViewer(streamId, enabled) {
 
     const requestConnection = () => {
       if (!active || connectedRef.current) return;
+      if (pcRef.current?.connectionState === "connected") return;
       socket.emit("viewer_ping", { streamId: streamIdStr });
     };
 
@@ -177,7 +179,7 @@ export default function useWebRTCViewer(streamId, enabled) {
 
         socket.emit("join_live_room", { streamId: streamIdStr, role: "viewer" });
         requestConnection();
-        pingTimer = setInterval(requestConnection, 3000);
+        pingTimer = setInterval(requestConnection, 8000);
       } catch (err) {
         setError(err.message || "Cannot reach live server");
       }

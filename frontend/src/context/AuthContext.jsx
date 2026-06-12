@@ -1,11 +1,14 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import API from "../api/axios";
+import i18n from "../i18n";
 import {
   saveAuthSession,
   clearAuthSession,
   getStoredToken,
+  getStoredRefreshToken,
   loadRememberedEmail,
 } from "../utils/authStorage";
+import socket from "../socket/socket";
 
 const AuthContext = createContext(null);
 
@@ -22,18 +25,24 @@ export function AuthProvider({ children }) {
           if (freshToken) {
             saveAuthSession({
               token: freshToken,
+              refreshToken: getStoredRefreshToken(),
               user: profile,
               email: profile.email,
               rememberEmail: !!loadRememberedEmail(),
             });
           }
           setUser(profile);
+          socket.emit("join_user_room", { userId: profile._id });
           if (res.data.theme) {
             localStorage.setItem("theme", res.data.theme);
             document.documentElement.classList.toggle("dark", res.data.theme === "dark");
           }
           if (res.data.language) {
-            localStorage.setItem("language", res.data.language);
+            const lang = res.data.language === "hi" ? "en" : res.data.language;
+            if (lang === "en" || lang === "ne") {
+              localStorage.setItem("language", lang);
+              i18n.changeLanguage(lang);
+            }
           }
         })
         .catch(() => {
@@ -48,40 +57,47 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password, rememberEmail = false) => {
     const res = await API.post("/auth/login", { email, password });
-    const { token: _token, ...profile } = res.data;
     saveAuthSession({
       token: res.data.token,
-      user: profile,
+      refreshToken: res.data.refreshToken,
+      user: res.data,
       email,
       rememberEmail,
     });
-    setUser(profile);
+    setUser(res.data);
+    socket.emit("join_user_room", { userId: res.data._id });
     return res.data;
   };
 
   const register = async (name, email, password) => {
     const res = await API.post("/auth/register", { name, email, password });
-    const { token: _token, ...profile } = res.data;
     saveAuthSession({
       token: res.data.token,
-      user: profile,
+      refreshToken: res.data.refreshToken,
+      user: res.data,
       email,
       rememberEmail: true,
     });
-    setUser(profile);
+    setUser(res.data);
+    socket.emit("join_user_room", { userId: res.data._id });
     return res.data;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const refreshToken = getStoredRefreshToken();
+    if (refreshToken) {
+      await API.post("/auth/logout", { refreshToken }).catch(() => {});
+    }
     clearAuthSession();
     setUser(null);
   };
 
   const isAdmin = user?.role === "admin";
+  const isReporter = user?.role === "reporter";
   const isLoggedIn = !!user;
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, isAdmin, isLoggedIn }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, isAdmin, isReporter, isLoggedIn }}>
       {children}
     </AuthContext.Provider>
   );

@@ -56,6 +56,13 @@ app.use("/api/ads", require("./routes/adRoutes"));
 app.use("/api/live", require("./routes/liveStreamRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/settings", require("./routes/settingsRoutes"));
+app.use("/api/newsletter", require("./routes/newsletterRoutes"));
+app.use("/api/live-events", require("./routes/liveEventRoutes"));
+app.use("/api/breaking", require("./routes/breakingNewsRoutes"));
+app.use("/api/notifications", require("./routes/notificationRoutes"));
+app.use("/api/media", require("./routes/mediaRoutes"));
+app.use("/api/seo", require("./routes/seoRoutes"));
+app.use("/api/search", require("./routes/searchRoutes"));
 
 app.get("/", (req, res) => {
   res.json({ message: "News Portal API Running" });

@@ -5,6 +5,7 @@ import ArticlePublishPreview from "../../components/ArticlePublishPreview";
 import RichTextEditor from "../../components/RichTextEditor";
 import { defaultFeaturedImage, normalizeContent, normalizeSummary } from "../../utils/articleFormat";
 import { getImageUrl } from "../../utils/formatTime";
+import LanguageField from "../../components/admin/LanguageField";
 
 export default function EditArticle() {
   const { id } = useParams();
@@ -58,6 +59,7 @@ export default function EditArticle() {
     data.append("mediaType", form.mediaType || "article");
     data.append("locale", form.locale || "en");
     data.append("isBreaking", form.isBreaking || false);
+    data.append("isFeatured", form.isFeatured || false);
     data.append("seoTitle", form.seoTitle || form.title);
     data.append("seoDescription", form.seoDescription || summary.slice(0, 160));
     if (form.keywords) data.append("keywords", form.keywords);
@@ -76,6 +78,11 @@ export default function EditArticle() {
       <h1 className="mb-6 text-2xl font-extrabold dark:text-white">Edit Article</h1>
       <div className="grid gap-8 lg:grid-cols-2">
         <form onSubmit={save} className="max-w-2xl space-y-4">
+          <LanguageField
+            label="Article language"
+            value={form.locale || "ne"}
+            onChange={handleChange}
+          />
           <input name="title" value={form.title} onChange={handleChange} required
             className="w-full border px-3 py-2 dark:border-slate-600 dark:bg-slate-800 dark:text-white" />
           <textarea name="summary" value={form.summary || ""} onChange={handleChange} rows={2}
@@ -94,6 +101,10 @@ export default function EditArticle() {
           <label className="flex items-center gap-2 text-sm dark:text-slate-300">
             <input type="checkbox" name="isBreaking" checked={form.isBreaking || false} onChange={handleChange} />
             Breaking News
+          </label>
+          <label className="flex items-center gap-2 text-sm dark:text-slate-300">
+            <input type="checkbox" name="isFeatured" checked={form.isFeatured || false} onChange={handleChange} />
+            Featured story
           </label>
           <div className="border border-slate-200 p-4 dark:border-slate-700">
             <p className="mb-2 text-sm font-bold dark:text-white">Featured Image</p>
@@ -121,6 +132,7 @@ export default function EditArticle() {
           categoryName={categoryName}
           imageUrl={previewImage}
           isBreaking={form.isBreaking}
+          locale={form.locale || "ne"}
         />
       </div>
     </div>

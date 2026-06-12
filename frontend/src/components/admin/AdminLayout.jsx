@@ -11,7 +11,13 @@ const links = [
   { to: "/admin/reporters", label: "reporters" },
   { to: "/admin/ads", label: "ads" },
   { to: "/admin/seo", label: "seo" },
-  { to: "/admin/live", label: "liveBroadcast" }
+  { to: "/admin/live", label: "liveBroadcast" },
+  { to: "/admin/live-events", label: "liveEvents" },
+  { to: "/admin/breaking", label: "breakingNews" },
+  { to: "/admin/pending", label: "pendingReview" },
+  { to: "/admin/media", label: "mediaLibrary" },
+  { to: "/admin/comments", label: "commentModeration" },
+  { to: "/admin/notifications", label: "notifications" },
 ];
 
 export default function AdminLayout() {

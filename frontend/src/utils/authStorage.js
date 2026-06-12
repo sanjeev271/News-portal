@@ -1,9 +1,10 @@
 const AUTH_FILE_KEY = "news_portal_auth.json";
 const REMEMBER_EMAIL_KEY = "news_portal_remembered_email";
 
-export function saveAuthSession({ token, user, email, rememberEmail = false }) {
+export function saveAuthSession({ token, refreshToken, user, email, rememberEmail = false }) {
   const payload = {
     token,
+    refreshToken,
     user,
     savedAt: Date.now(),
   };
@@ -38,4 +39,9 @@ export function clearAuthSession() {
 export function getStoredToken() {
   const session = loadAuthSession();
   return session?.token || localStorage.getItem("token");
+}
+
+export function getStoredRefreshToken() {
+  const session = loadAuthSession();
+  return session?.refreshToken || null;
 }

@@ -9,6 +9,8 @@ export default function LiveStreamView({
   stream,
   mode = "auto",
   className = "",
+  videoRef,
+  videoMuted = true,
 }) {
   if (!stream) {
     return (
@@ -30,6 +32,8 @@ export default function LiveStreamView({
         streamId={stream._id}
         active={isLive}
         className={className}
+        videoRef={videoRef}
+        muted={videoMuted}
         label={
           isLive
             ? "Waiting for live camera feed…"
@@ -40,7 +44,17 @@ export default function LiveStreamView({
   }
 
   if (kind === "embed" && playbackUrl) {
-    return <StreamPlayer url={playbackUrl} title={stream.title} className={className} />;
+    const isVideoFile = /\.(mp4|webm|ogg|m3u8)$/i.test(playbackUrl) || playbackUrl.includes("/uploads/");
+    return (
+      <StreamPlayer
+        url={playbackUrl}
+        title={stream.title}
+        className={className}
+        videoRef={isVideoFile ? videoRef : undefined}
+        hideNativeControls={isVideoFile}
+        muted={videoMuted}
+      />
+    );
   }
 
   let message = "No stream available";

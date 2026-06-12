@@ -1,18 +1,25 @@
 const express = require("express");
 const router = express.Router();
-
 const auth = require("../middleware/authMiddleware");
-
+const allowRoles = require("../middleware/roleMiddleware");
 const {
   addComment,
-  getComments
+  getComments,
+  editComment,
+  deleteComment,
+  reportComment,
+  moderateComment,
+  getReportedComments,
+  getAdminComments,
 } = require("../controllers/commentController");
 
-
-// ADD COMMENT
+router.get("/admin/all", auth, allowRoles("admin"), getAdminComments);
+router.get("/admin/reported", auth, allowRoles("admin"), getReportedComments);
 router.post("/", auth, addComment);
-
-// GET COMMENTS FOR ARTICLE
+router.put("/:id", auth, editComment);
+router.delete("/:id", auth, deleteComment);
+router.post("/:id/report", auth, reportComment);
+router.patch("/:id/moderate", auth, allowRoles("admin"), moderateComment);
 router.get("/:articleId", getComments);
 
 module.exports = router;

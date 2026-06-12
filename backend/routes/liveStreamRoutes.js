@@ -10,14 +10,14 @@ const {
   createStream,
   updateStream,
   uploadRecording,
-  deleteStream
+  deleteStream,
 } = require("../controllers/liveStreamController");
 
 router.get("/active", getActiveStream);
-router.get("/", auth, allowRoles("admin"), getAllStreams);
-router.post("/", auth, allowRoles("admin"), createStream);
-router.put("/:id", auth, allowRoles("admin"), updateStream);
-router.post("/:id/recording", auth, allowRoles("admin"), uploadLimiter, optionalRecordingUpload, uploadRecording);
+router.get("/", auth, allowRoles("admin", "reporter"), getAllStreams);
+router.post("/", auth, allowRoles("admin", "reporter"), createStream);
+router.put("/:id", auth, allowRoles("admin", "reporter"), updateStream);
+router.post("/:id/recording", auth, allowRoles("admin", "reporter"), uploadLimiter, optionalRecordingUpload, uploadRecording);
 router.delete("/:id", auth, allowRoles("admin"), deleteStream);
 
 module.exports = router;

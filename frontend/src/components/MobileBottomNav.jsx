@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../context/AuthContext";
 
-const tabs = [
+const baseTabs = [
   {
     to: "/",
     label: "home",
@@ -15,7 +16,7 @@ const tabs = [
   {
     to: "/trending",
     label: "trending",
-    icon: (active) => (
+    icon: () => (
       <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
       </svg>
@@ -23,15 +24,24 @@ const tabs = [
   },
   {
     to: "/live",
-    label: "liveTV",
+    label: "live",
     icon: () => (
       <span className="relative flex h-6 w-6 items-center justify-center">
         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
       </span>
     ),
     highlight: true,
+  },
+  {
+    to: "/live-tv",
+    label: "liveTV",
+    icon: () => (
+      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+      </svg>
+    ),
   },
   {
     to: "/search",
@@ -42,24 +52,28 @@ const tabs = [
       </svg>
     ),
   },
-  {
-    to: "/bookmarks",
-    label: "bookmarks",
-    icon: () => (
-      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-      </svg>
-    ),
-  },
 ];
+
+const bookmarksTab = {
+  to: "/bookmarks",
+  label: "bookmarks",
+  icon: () => (
+    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+    </svg>
+  ),
+};
 
 export default function MobileBottomNav() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const location = useLocation();
+
+  const tabs = user ? [...baseTabs, bookmarksTab] : baseTabs;
 
   const isActive = (tab) => {
     if (tab.end) return location.pathname === tab.to;
-    return location.pathname.startsWith(tab.to);
+    return location.pathname === tab.to || location.pathname.startsWith(`${tab.to}/`);
   };
 
   return (

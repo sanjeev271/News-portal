@@ -8,6 +8,7 @@ function isPublicRead(req) {
   if (path === "/api/categories" || path === "/api/ads") return true;
   if (path === "/api/articles" || path === "/api/articles/trending") return true;
   if (path.startsWith("/api/articles/search")) return true;
+  if (path.startsWith("/api/search")) return true;
   if (/^\/api\/articles\/[^/]+$/.test(path) && !path.includes("/admin")) return true;
   return false;
 }

@@ -11,7 +11,7 @@ exports.getUsers = async (req, res) => {
 
 exports.getReporters = async (req, res) => {
   try {
-    const reporters = await User.find({ role: { $in: ["reporter", "editor"] } }).select("-password");
+    const reporters = await User.find({ role: "reporter" }).select("-password");
     res.json(reporters);
   } catch (error) {
     res.status(500).json({ message: error.message });

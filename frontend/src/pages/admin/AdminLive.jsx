@@ -78,14 +78,20 @@ export default function AdminLive() {
   };
 
   const uploadRecordingBlob = async (id, blob) => {
-    if (!blob) return;
+    if (!blob || blob.size === 0) return;
     setUploading(true);
     try {
       const data = new FormData();
-      data.append("recording", blob, `live-recording-${Date.now()}.webm`);
+      data.append(
+        "recording",
+        new File([blob], `live-recording-${Date.now()}.webm`, { type: "video/webm" })
+      );
       const res = await API.post(`/live/${id}/recording`, data);
       setSelected(res.data);
       load();
+    } catch (err) {
+      const msg = err.response?.data?.message || "Recording upload failed";
+      setLoadError(msg);
     } finally {
       setUploading(false);
     }
@@ -128,7 +134,13 @@ export default function AdminLive() {
     cleanupRef.current = null;
     setCameraActive(false);
     await API.put(`/live/${stream._id}`, { status: "ended" });
-    if (blob) await uploadRecordingBlob(stream._id, blob);
+    if (blob?.size > 0) {
+      try {
+        await uploadRecordingBlob(stream._id, blob);
+      } catch {
+        /* uploadRecordingBlob handles errors */
+      }
+    }
     load();
   };
 

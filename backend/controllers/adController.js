@@ -57,3 +57,21 @@ exports.deleteAd = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.trackImpression = async (req, res) => {
+  try {
+    await Ad.findByIdAndUpdate(req.params.id, { $inc: { impressions: 1 } });
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.trackClick = async (req, res) => {
+  try {
+    await Ad.findByIdAndUpdate(req.params.id, { $inc: { clicks: 1 } });
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

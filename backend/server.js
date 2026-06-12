@@ -8,6 +8,8 @@ const app = require("./app");
 const mongoose = require("mongoose");
 const { Server } = require("socket.io");
 const setupLiveSignaling = require("./utils/liveSignaling");
+const setupSocketHandlers = require("./socket/handlers");
+const setupLiveEngagement = require("./socket/liveEngagement");
 const { getSocketCorsOptions } = require("./utils/corsConfig");
 
 const server = http.createServer(app);
@@ -18,6 +20,8 @@ const io = new Server(server, {
 
 app.set("io", io);
 setupLiveSignaling(io);
+setupSocketHandlers(io, app);
+setupLiveEngagement(io);
 
 io.on("connection", (socket) => {
   if (process.env.NODE_ENV !== "production") {

@@ -2,14 +2,18 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import API from "../api/axios";
 import ArticleCard from "../components/ArticleCard";
+import { currentLocale, dedupeById } from "../utils/localize";
 
 export default function Trending() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [articles, setArticles] = useState([]);
 
   useEffect(() => {
-    API.get("/articles/trending").then((r) => setArticles(r.data));
-  }, []);
+    const locale = currentLocale();
+    API.get("/articles/trending", { params: { locale } })
+      .then((r) => setArticles(dedupeById(r.data)))
+      .catch(() => setArticles([]));
+  }, [i18n.language]);
 
   return (
     <div className="bg-white dark:bg-slate-950">

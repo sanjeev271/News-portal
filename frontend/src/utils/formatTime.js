@@ -1,19 +1,36 @@
+import i18n from "../i18n";
+
+export function formatClockTime(dateStr) {
+  if (!dateStr) return "";
+  const locale = i18n.language === "ne" ? "ne-NP" : "en-GB";
+  return new Date(dateStr).toLocaleTimeString(locale, {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
 export function formatTime(dateStr) {
-  if (!dateStr) return "Just now";
+  if (!dateStr) return i18n.t("justNow");
 
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
 
-  if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return i18n.t("justNow");
+  if (mins < 60) return i18n.t("minutesAgo", { count: mins });
 
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
+  if (hrs < 24) return i18n.t("hoursAgo", { count: hrs });
 
   const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d ago`;
+  if (days < 7) return i18n.t("daysAgo", { count: days });
 
-  return new Date(dateStr).toLocaleDateString();
+  const locale = i18n.language === "ne" ? "ne-NP" : "en-GB";
+  return new Date(dateStr).toLocaleDateString(locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 export function getInitials(name) {
